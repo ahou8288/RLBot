@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import pyvjoy
 import time
 
