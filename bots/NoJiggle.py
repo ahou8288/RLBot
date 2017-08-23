@@ -4,12 +4,8 @@ import math
 Moves towards the ball, when close to the right direction it does not jiggle.
 '''
 
-# Optional Information. Fill out only if you wish.
-
-# Your real name: Andrew Houghton
-# Contact Email: houghtonandrew0@gmail.com
-# Can this bot's code be shared publicly (Default: No): No
-# Can non-tournment gameplay of this bot be displayed publicly (Default: No): Yes
+import logging
+logging.basicConfig(filename='jiggle.log', filemode='w',level=logging.DEBUG)
 
 class agent:
 
@@ -46,12 +42,33 @@ class agent:
 				player_front_direction_in_radians += 2 * math.pi
 			if (relative_angle_to_ball_in_radians < 0):
 				relative_angle_to_ball_in_radians += 2 * math.pi
-		if (relative_angle_to_ball_in_radians - player_front_direction_in_radians < 0.1):
-			turn = 16383
-		elif (relative_angle_to_ball_in_radians > player_front_direction_in_radians):
-			turn = 0
+
+		angle_difference=abs(relative_angle_to_ball_in_radians - player_front_direction_in_radians)
+		# implementing p-control
+		# we want the angle difference to be zero
+		turn_strength=angle_difference/math.pi #should be zero to one
+
+		turn=16383
+		if (relative_angle_to_ball_in_radians > player_front_direction_in_radians):
+			turn -= 16383*(turn_strength+0.2)
 		else:
-			turn = 32767
+			turn += 16384*(turn_strength+0.2)
 		
-		return [turn, 16383, 32767, 0, 0, 0, 0]
+		#Normalize
+		if (turn<0):
+			logging.warning("turn<0")
+			turn=0
+		elif(turn>32767):
+			logging.warning("turn>32767")
+			turn=32767
+
+		if self.team=="blue":
+			logging.info("ball player diff str turn\t{0:.2f}\t{1:.2f}\t{2:.2f}\t{3:.2f}\t{4}".format(
+				relative_angle_to_ball_in_radians,
+				player_front_direction_in_radians,
+				angle_difference,
+				turn_strength,
+				turn))
+
+		return [int(turn), 16383, 32767, 0, 0, 0, 0]
 	
